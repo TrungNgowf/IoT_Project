@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face { 
+  font-family: "BoxedRound"; 
+  src: url("../../public/fonts/BoxedRoundBook.ttf"); 
+} 
+@font-face { 
+  font-family: "BoxedRoundMedium"; 
+  src: url("../../public/fonts/BoxedRoundMedium.ttf"); 
+} 
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -29,5 +38,10 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+@layer components {
+  .dashboard-card {
+    @apply bg-white border-none rounded-lg w-full p-2 drop-shadow-lg flex justify-center items-center;
   }
 }
