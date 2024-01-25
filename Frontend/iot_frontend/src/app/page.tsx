@@ -22,8 +22,7 @@ export default function Dashboard() {
   };
 
   const generateRandomNumber = (min: number, max: number) => {
-      return Math.floor(Math.random()
-      * (max - min + 1)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
   useEffect(() => {
@@ -31,40 +30,64 @@ export default function Dashboard() {
       setTemperatureList((prevNumbers) => {
         const newNumbers = [...prevNumbers];
         newNumbers.shift();
-        let crtTemp = generateRandomNumber(0,60)
+        let crtTemp = generateRandomNumber(0, 100);
         setCurrentTemperature(crtTemp);
         newNumbers.push(crtTemp);
         return newNumbers;
       });
       setHumidityList((prevNumbers) => {
-          const newNumbers = [...prevNumbers];
-          newNumbers.shift();
-          let crtHum = generateRandomNumber(50,100)
-          setCurrentHumidity(crtHum);
-          newNumbers.push(crtHum);
-          return newNumbers;
-        });
-        setBrightnessList((prevNumbers) => {
-          const newNumbers = [...prevNumbers];
-          newNumbers.shift();
-          let crtBright = generateRandomNumber(100,1000)
-          setCurrentBrightness(crtBright);
-          newNumbers.push(crtBright);
-          return newNumbers;
-        });
-    }, 1000);
+        const newNumbers = [...prevNumbers];
+        newNumbers.shift();
+        let crtHum = generateRandomNumber(50, 100);
+        setCurrentHumidity(crtHum);
+        newNumbers.push(crtHum);
+        return newNumbers;
+      });
+      setBrightnessList((prevNumbers) => {
+        const newNumbers = [...prevNumbers];
+        newNumbers.shift();
+        let crtBright = generateRandomNumber(100, 1000);
+        setCurrentBrightness(crtBright);
+        newNumbers.push(crtBright);
+        return newNumbers;
+      });
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
+  const temperatureColor = (temp: number) => {
+    if (temp < 25) return "to-[#ffa4a4]";
+    else if (temp < 50) return "to-[#ff7c7c]";
+    else if (temp < 75) return "to-[#ff4545]";
+    else return "to-[#ff0000]";
+  };
+  const humidityColor = (hum: number) => {
+    if (hum < 65) return "to-[#9db2ff]";
+    else if (hum < 80) return "to-[#7190ff]";
+    else if (hum < 90) return "to-[#3a65ff]";
+    else return "to-[#0037ff]";
+  };
+  const brightnessColor = (bri: number) => {
+    if (bri < 250) return "to-[#fffd8f]";
+    else if (bri < 500) return "to-[#fffd6c]";
+    else if (bri < 750) return "to-[#fffc3f]";
+    else return "to-[#fffb00]";
+  };
   return (
     <div className="w-screen h-screen p-5 m-auto bg-white">
       <div className="grid grid-cols-3 gap-2 w-full h-full">
-        <div className="dashboard-card bg-gradient-to-tr from-[#ffd8d8] to-[#ff0000] row-span-1">
+        <div
+          className={`dashboard-card bg-gradient-to-tr from-[#ffd8d8] ${temperatureColor(
+            currentTemperature
+          )} row-span-1`}
+        >
           <div className="flex items-center justify-center gap-4">
             <div className="flex flex-col items-center justify-center">
               <p className="text-[30px] font-semibold text-black">
                 Temperature
               </p>
-              <p className="text-[50px] text-black font-semibold drop-shadow-lg">{currentTemperature}°C</p>
+              <p className="text-[50px] text-black font-semibold drop-shadow-lg">
+                {currentTemperature}°C
+              </p>
             </div>
             <Image
               src="/icons/temperature.png"
@@ -75,12 +98,14 @@ export default function Dashboard() {
             />
           </div>
         </div>
-        <div className="dashboard-card bg-gradient-to-tr from-[#c8d4ff] to-[#0339fc]">
+        <div className={`dashboard-card bg-gradient-to-tr from-[#c8d4ff] ${humidityColor(currentHumidity)}`}>
           <div className="flex items-center justify-center gap-4">
             <div className="flex flex-col items-center justify-center">
               <p className="text-[30px] font-semibold text-black">Humidity</p>
               <div>
-                <p className="text-[50px] text-black font-semibold drop-shadow-lg">{currentHumidity}%</p>
+                <p className="text-[50px] text-black font-semibold drop-shadow-lg">
+                  {currentHumidity}%
+                </p>
               </div>
             </div>
             <Image
@@ -92,11 +117,13 @@ export default function Dashboard() {
             />
           </div>
         </div>
-        <div className="dashboard-card bg-gradient-to-tr from-[#fff3c7] to-[#fffb12]">
+        <div className={`dashboard-card bg-gradient-to-tr from-[#fffebe] ${brightnessColor(currentBrightness)}`}>
           <div className="flex items-center justify-center gap-4">
             <div className="flex flex-col items-center justify-center">
               <p className="text-[30px] font-semibold text-black">Brightness</p>
-              <p className="text-[50px] text-black font-semibold drop-shadow-lg">{currentBrightness}lm</p>
+              <p className="text-[50px] text-black font-semibold drop-shadow-lg">
+                {currentBrightness}lm
+              </p>
             </div>
             <Image
               src="/icons/brightness.png"
@@ -108,7 +135,11 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="dashboard-card col-span-2 row-span-4">
-          <IndexChart temperatureList={temperatureList} humidityList={humidityList} brightnessList={brightnessList}/>
+          <IndexChart
+            temperatureList={temperatureList}
+            humidityList={humidityList}
+            brightnessList={brightnessList}
+          />
         </div>
         <div className="dashboard-card row-span-2">
           <div className="flex flex-col items-center justify-center gap-3">
