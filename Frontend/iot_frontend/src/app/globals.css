@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face { 
-  font-family: "BoxedRound"; 
-  src: url("../../public/fonts/BoxedRoundBook.ttf"); 
-} 
-@font-face { 
-  font-family: "BoxedRoundMedium"; 
-  src: url("../../public/fonts/BoxedRoundMedium.ttf"); 
-} 
+@font-face {
+  font-family: "BoxedRound";
+  src: url("../../public/fonts/BoxedRoundBook.ttf");
+}
+@font-face {
+  font-family: "BoxedRoundMedium";
+  src: url("../../public/fonts/BoxedRoundMedium.ttf");
+}
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -24,7 +24,10 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
-
+html {
+  margin: 0;
+  padding: 0;
+}
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(

@@ -1,6 +1,14 @@
-@iot_backend_HostAddress = http://localhost:5178
+@iot_backend_HostAddress = https://localhost:7000
 
 GET {{iot_backend_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+
+GET {{iot_backend_HostAddress}}/api/dashboard/GetAllSwitchHistories
+
+###
+
+GET {{iot_backend_HostAddress}}/api/dashboard
 
 ###
