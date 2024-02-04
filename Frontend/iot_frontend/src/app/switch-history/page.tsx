@@ -11,18 +11,20 @@ export default function SwitchHistory() {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    handlePageChange(1);
+    handlePageChange(currentPage, filter);
   }, []);
 
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = (pageNumber: number, filter: string) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
-    GetSwitchHistory(pageNumber).then((data) => {
+    GetSwitchHistory(pageNumber, filter).then((data) => {
       const switchList = data as SwitchHistoryList;
       setCurrentPage(switchList.currentPage);
       setListSwitchHistory(switchList.items);
       setTotalPages(switchList.totalPages);
+      setFilter(filter);
     });
   };
 
@@ -115,54 +117,75 @@ export default function SwitchHistory() {
             </table>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <a
-            href="#"
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-          >
-            <svg
-              className="w-3.5 h-3.5 me-2 rtl:rotate-180"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 10"
+        <div className="flex  items-center justify-between w-[60vw] px-5 mb-3">
+          <div className="flex flex-row justify-center items-center gap-3">
+            <label className="text-[17px] text-white flex flex-row line-clamp-1">
+              Filter by
+            </label>
+            <select
+              id="filters"
+              onChange={(e) => {
+                e.preventDefault();
+                handlePageChange(1, e.target.value);
+              }}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 5H1m0 0 4 4M1 5l4-4"
-              />
-            </svg>
-            Previous
-          </a>
-          <h1 className="text-[17px]">
-            Page {currentPage} of {totalPages}
-          </h1>
-          <a
-            href="#"
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-          >
-            Next
-            <svg
-              className="w-3.5 h-3.5 ms-2 rtl:rotate-180"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 10"
+              <option value="all" selected>
+                All
+              </option>
+              <option value="light">Light</option>
+              <option value="fan">Fan</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-center gap-3">
+            <a
+              href="#"
+              onClick={() => handlePageChange(currentPage - 1, filter)}
+              className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
             >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M1 5h12m0 0L9 1m4 4L9 9"
-              />
-            </svg>
-          </a>
+              <svg
+                className="w-3.5 h-3.5 me-2 rtl:rotate-180"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 14 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 5H1m0 0 4 4M1 5l4-4"
+                />
+              </svg>
+              Previous
+            </a>
+            <h1 className="text-[17px]">
+              Page {currentPage} of {totalPages}
+            </h1>
+            <a
+              href="#"
+              onClick={() => handlePageChange(currentPage + 1, filter)}
+              className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              Next
+              <svg
+                className="w-3.5 h-3.5 ms-2 rtl:rotate-180"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 14 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M1 5h12m0 0L9 1m4 4L9 9"
+                />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </>

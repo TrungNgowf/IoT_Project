@@ -22,7 +22,9 @@ export default function IndexChart({
       yAxis={[
         {
           min: 0,
-          max: 1000,
+          max: 1000, 
+          tickMinStep: 10,
+          tickMaxStep: 50
         },
       ]}
       series={[
@@ -31,21 +33,18 @@ export default function IndexChart({
           color: "#fffb12",
           data: brightnessList,
           curve: "catmullRom",
-          area: true,
         },
         {
           label: "Humidity",
           color: "#0339fc",
           data: humidityList,
           curve: "catmullRom",
-          area: true,
         },
         {
           label: "Temperature",
           color: "#ff0000",
           data: temperatureList,
           curve: "catmullRom",
-          area: true,
         },
       ]}
     />

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using iot_backend.Dto;
 using Microsoft.AspNetCore.Cors;
 using iot_backend.Helpers;
+using System.Linq.Dynamic;
 
 namespace iot_backend.Controllers
 {
@@ -21,10 +22,12 @@ namespace iot_backend.Controllers
         }
 
         [HttpGet("SwitchHistory")]
-        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(int? pageNumber)
+        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(int? pageNumber, string? filter)
         {
             const int pageSize = 10;
-            var switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(_context.SwitchHistory.AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
+            var switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(_context.SwitchHistory
+                .Where(e => filter == "light" ? e.SwitchType == 1 : filter == "fan" ? e.SwitchType == 2 : true)
+                .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
             PaginationOutput<SwitchHistory> output = new PaginationOutput<SwitchHistory>
             {
                 currentPage = switchHistory.PageIndex,
@@ -50,10 +53,37 @@ namespace iot_backend.Controllers
         }
 
         [HttpGet("SensorHistory")]
-        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(int? pageNumber)
+        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(int? pageNumber, int orderBy = 0, bool isAsc = false)
         {
             const int pageSize = 10;
-            var sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
+            PaginatedList<SensorHistory> sensorHistory;
+            if (isAsc)
+            {
+                if (orderBy == 0)
+                {
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
+                    .OrderBy(u => u.CreationTime), pageNumber ?? 1, pageSize);
+                }
+                else
+                {
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
+                    .OrderBy(u => orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness), pageNumber ?? 1, pageSize);
+                }
+
+            }
+            else
+            {
+                if (orderBy == 0)
+                {
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
+                    .OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
+                }
+                else
+                {
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
+                    .OrderByDescending(u => orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness), pageNumber ?? 1, pageSize);
+                }
+            }
             PaginationOutput<SensorHistory> output = new PaginationOutput<SensorHistory>
             {
                 currentPage = sensorHistory.PageIndex,

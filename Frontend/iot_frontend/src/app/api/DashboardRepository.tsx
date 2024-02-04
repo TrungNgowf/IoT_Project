@@ -35,9 +35,9 @@ export async function SensorChange(
   }
 }
 
-export async function GetSensorHistory( page: number = 1) {
+export async function GetSensorHistory( page: number = 1, orderBy: number = 0, isAsc: boolean = false) {
   try {
-    const res = await fetch(`${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}`, {
+    const res = await fetch(`${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -47,9 +47,9 @@ export async function GetSensorHistory( page: number = 1) {
   }
 }
 
-export async function GetSwitchHistory(page: number = 1) {
+export async function GetSwitchHistory(page: number = 1, filter: string = "all") {
   try {
-    const res = await fetch(`${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}`, {
+    const res = await fetch(`${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });

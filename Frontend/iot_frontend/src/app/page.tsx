@@ -82,7 +82,7 @@ export default function Dashboard() {
         }
         return newNumbers;
       });
-    }, 5000);
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 

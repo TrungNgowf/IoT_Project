@@ -4,6 +4,8 @@ import { use, useEffect, useState } from "react";
 import Navbar from "../components/navbar";
 import { GetSensorHistory } from "../api/DashboardRepository";
 import moment from "moment";
+import { Console } from "console";
+import { debug } from "util";
 
 export default function SensorHistory() {
   const [listSensorHistory, setListSensorHistory] = useState(
@@ -11,18 +13,26 @@ export default function SensorHistory() {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [orderBy, setOrderBy] = useState(0);
+  const [isAsc, setIsAsc] = useState(false);
 
   useEffect(() => {
-    handlePageChange(1);
+    handlePageChange(currentPage, orderBy, isAsc);
   }, []);
 
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = (
+    pageNumber: number,
+    orderBy: number,
+    isAsc: boolean
+  ) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
-    GetSensorHistory(pageNumber).then((data) => {
+    GetSensorHistory(pageNumber, orderBy, isAsc).then((data) => {
       const sensorList = data as SensorHistoryList;
       setCurrentPage(sensorList.currentPage);
       setListSensorHistory(sensorList.items);
       setTotalPages(sensorList.totalPages);
+      setOrderBy(orderBy);
+      setIsAsc(isAsc);
     });
   };
 
@@ -30,6 +40,7 @@ export default function SensorHistory() {
     <>
       <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
         <Navbar index={1} />
+
         <div className="p-5 m-auto w-[60vw]">
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -38,7 +49,12 @@ export default function SensorHistory() {
                   <th scope="col" className="px-6 py-3">
                     <div className="flex items-center justify-center">
                       Temperature
-                      <a href="#">
+                      <a
+                        href="#"
+                        onClick={() =>
+                          handlePageChange(1, 1, orderBy == 1 ? !isAsc : false)
+                        }
+                      >
                         <svg
                           className="w-3 h-3 ms-1.5"
                           aria-hidden="true"
@@ -54,7 +70,12 @@ export default function SensorHistory() {
                   <th scope="col" className="px-6 py-3">
                     <div className="flex items-center justify-center">
                       Humidity
-                      <a href="#">
+                      <a
+                        href="#"
+                        onClick={() =>
+                          handlePageChange(1, 2, orderBy == 2 ? !isAsc : false)
+                        }
+                      >
                         <svg
                           className="w-3 h-3 ms-1.5"
                           aria-hidden="true"
@@ -70,7 +91,12 @@ export default function SensorHistory() {
                   <th scope="col" className="px-6 py-3">
                     <div className="flex items-center justify-center">
                       Brightness
-                      <a href="#">
+                      <a
+                        href="#"
+                        onClick={() =>
+                          handlePageChange(1, 3, orderBy == 3 ? !isAsc : false)
+                        }
+                      >
                         <svg
                           className="w-3 h-3 ms-1.5"
                           aria-hidden="true"
@@ -86,7 +112,12 @@ export default function SensorHistory() {
                   <th scope="col" className="px-6 py-3">
                     <div className="flex items-center justify-center">
                       Measurement Time
-                      <a href="#">
+                      <a
+                        href="#"
+                        onClick={() =>
+                          handlePageChange(1, 0, orderBy == 0 ? !isAsc : false)
+                        }
+                      >
                         <svg
                           className="w-3 h-3 ms-1.5"
                           aria-hidden="true"
@@ -135,10 +166,11 @@ export default function SensorHistory() {
             </table>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-3 mb-3">
+
+        <div className="flex items-center justify-center gap-3 mb-4">
           <a
             href="#"
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => handlePageChange(currentPage - 1, orderBy, isAsc)}
             className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
             <svg
@@ -163,7 +195,7 @@ export default function SensorHistory() {
           </h1>
           <a
             href="#"
-            onClick={() => handlePageChange(currentPage + 1)}
+            onClick={() => handlePageChange(currentPage + 1, orderBy, isAsc)}
             className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
             Next
