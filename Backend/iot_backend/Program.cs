@@ -1,3 +1,4 @@
+using iot_backend;
 using iot_backend.Configuration;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,5 +43,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseCors("nextApp");
+
+Publisher.Main(args);
 
 app.Run();
