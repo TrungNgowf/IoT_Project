@@ -12,8 +12,8 @@ using iot_backend.Configuration;
 namespace iot_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240127175934_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240215071732_CreateDB")]
+    partial class CreateDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,5 +1,6 @@
 using iot_backend;
 using iot_backend.Configuration;
+using iot_backend.MQTT;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,13 +19,13 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("nextApp",
-               builder =>
-               {
-                   builder.WithOrigins("http://localhost:3000")
-                       .AllowAnyHeader()
-                       .AllowAnyMethod()
-                       .AllowCredentials();
-               });
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
 });
 
 var app = builder.Build();
@@ -44,6 +45,10 @@ app.MapControllers();
 
 app.UseCors("nextApp");
 
-Publisher.Main(args);
+await MQTT_Client.Connect_Mqtt_Client();
+
+await MQTT_Client.Subscribe_And_Received_Message();
 
 app.Run();
+
+
