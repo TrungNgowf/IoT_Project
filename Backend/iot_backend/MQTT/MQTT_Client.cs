@@ -17,7 +17,7 @@ namespace iot_backend.MQTT;
 
 public static class MQTT_Client
 {
-    public static string brokerUrl = "b943a7dfb14f446cb8b0c381173f82f5.s1.eu.hivemq.cloud";
+    public static string brokerUrl = "10.0.0.203";
     public static string username = "iot-prj";
     public static string password = "Abc1@345";
     public static IMqttClient? mqttClient;
@@ -27,14 +27,10 @@ public static class MQTT_Client
     {
         var mqttFactory = new MqttFactory();
         mqttClient = mqttFactory.CreateMqttClient();
-        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(brokerUrl, 8883)
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer(brokerUrl, 2502)
+            .WithClientId("iot-server-2502")
             .WithCredentials(username, password).WithProtocolVersion(MqttProtocolVersion.V500)
-            .WithTlsOptions(
-                o =>
-                {
-                    o.WithCertificateValidationHandler(_ => true);
-                    o.WithSslProtocols(SslProtocols.Tls12);
-                }).Build();
+            .Build();
 
         var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
@@ -84,27 +80,25 @@ public static class MQTT_Client
             Console.WriteLine("MQTT application message is published.");
         }
     }
+
     public static async Task Subscribe_And_Received_Message()
     {
         var mqttFactory = new MqttFactory();
-        mqttClient.ApplicationMessageReceivedAsync += e =>
+        mqttClient.ApplicationMessageReceivedAsync += async e =>
         {
-            Console.WriteLine("Received application message.");
-            Console.WriteLine($"{Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
-            return Task.CompletedTask;
+            string receivedMessage = ($"{Encoding.Default.GetString(e.ApplicationMessage.PayloadSegment)}");
+            Console.WriteLine(receivedMessage);
+            await Publish_Message("sensor-client", receivedMessage);
+            await Task.CompletedTask;
         };
-        
+
         var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(
-                f =>
-                {
-                    f.WithTopic("test");
-                })
+                f => { f.WithTopic("sensor-server"); })
             .Build();
 
         await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
         Console.WriteLine("MQTT client subscribed to topic.");
-
     }
 }

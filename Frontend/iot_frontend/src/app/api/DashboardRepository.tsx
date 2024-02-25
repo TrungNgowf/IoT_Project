@@ -35,24 +35,37 @@ export async function SensorChange(
   }
 }
 
-export async function GetSensorHistory( page: number = 1, orderBy: number = 0, isAsc: boolean = false) {
+export async function GetSensorHistory(
+  page: number = 1,
+  orderBy: number = 0,
+  isAsc: boolean = false
+) {
   try {
-    const res = await fetch(`${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const res = await fetch(
+      `${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     return res.json();
   } catch (error) {
     console.log(error);
   }
 }
 
-export async function GetSwitchHistory(page: number = 1, filter: string = "all") {
+export async function GetSwitchHistory(
+  page: number = 1,
+  filter: string = "all"
+) {
   try {
-    const res = await fetch(`${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const res = await fetch(
+      `${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     return res.json();
   } catch (error) {
     console.log(error);

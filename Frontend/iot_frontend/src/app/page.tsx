@@ -4,8 +4,9 @@ import React, { StrictMode, useEffect, useState } from "react";
 import IndexChart from "./components/index-chart";
 import Config from "../configuration/config";
 import Navbar from "./components/navbar";
-import { Toaster, toast } from 'sonner'
+import { Toaster, toast } from "sonner";
 import { SwitchChange, SensorChange } from "./api/DashboardRepository";
+import mqtt from "mqtt";
 
 export default function Dashboard() {
   const [lightSwitch, setLightSwitch] = useState(false);
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [temperatureList, setTemperatureList] = useState(Array(10).fill(0));
   const [humidityList, setHumidityList] = useState(Array(10).fill(0));
   const [brightnessList, setBrightnessList] = useState(Array(10).fill(0));
+  const [client, setClient] = useState<mqtt.MqttClient | null>(null);
 
   const handleLightSwitch = () => {
     setLightSwitch(!lightSwitch);
@@ -30,61 +32,147 @@ export default function Dashboard() {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
+  const sensorChange = (
+    temperature: number,
+    humidity: number,
+    brightness: number
+  ) => {
+    setCurrentTemperature(temperature);
+    setCurrentHumidity(humidity);
+    setCurrentBrightness(brightness);
+    if (temperature > 85) toast.error("Temperature is too high");
+    if (humidity > 90) toast.info("Humidity is too high");
+    if (brightness > 850) toast.warning("Brightness is too high");
+    setTemperatureList((prevNumbers) => {
+      const newNumbers = [...prevNumbers];
+      newNumbers.shift();
+      newNumbers.push(temperature);
+      return newNumbers;
+    });
+    setHumidityList((prevNumbers) => {
+      const newNumbers = [...prevNumbers];
+      newNumbers.shift();
+      newNumbers.push(humidity);
+      return newNumbers;
+    });
+    setBrightnessList((prevNumbers) => {
+      const newNumbers = [...prevNumbers];
+      newNumbers.shift();
+      newNumbers.push(brightness);
+      return newNumbers;
+    });
+    SensorChange(temperature, humidity, brightness);
+  };
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      let updatedValue = {
-        temperature: -1,
-        humidity: -1,
-        brightness: -1,
-      };
-      setTemperatureList((prevNumbers) => {
-        const newNumbers = [...prevNumbers];
-        newNumbers.shift();
-        const crtTemp = generateRandomNumber(0, 100);
-        console.log(crtTemp);
-        setCurrentTemperature(crtTemp);
-        newNumbers.push(crtTemp);
-        updatedValue.temperature = crtTemp;
-        if(crtTemp > 85) toast.error('Temperature is too high');
-        return newNumbers;
+    if (client) {
+      console.log("client", client);
+      client.on("connect", () => {
+        console.log("connected");
+        client?.subscribe("sensor-client", (err) => {
+          if (err) {
+            console.log("error subscribing to sensor-client topic", err);
+          }
+        });
       });
-      setHumidityList((prevNumbers) => {
-        const newNumbers = [...prevNumbers];
-        newNumbers.shift();
-        const crtHum = generateRandomNumber(50, 100);
-        console.log(crtHum);
-        setCurrentHumidity(crtHum);
-        newNumbers.push(crtHum);
-        updatedValue.humidity = crtHum;
-        if(crtHum > 90) toast.info('Humidity is too high');
-        return newNumbers;
+
+      client.on("error", (err) => {
+        console.log("error", err);
       });
-      setBrightnessList((prevNumbers) => {
-        const newNumbers = [...prevNumbers];
-        newNumbers.shift();
-        const crtBright = generateRandomNumber(100, 1000);
-        console.log(crtBright);
-        setCurrentBrightness(crtBright);
-        newNumbers.push(crtBright);
-        updatedValue.brightness = crtBright;
-        if(crtBright > 850) toast.warning('Brightness is too high');
-        if (
-          updatedValue.temperature >= 0 &&
-          updatedValue.humidity >= 0 &&
-          updatedValue.brightness >= 0
-        ) {
-          console.log(updatedValue);
-          SensorChange(
-            updatedValue.temperature,
-            updatedValue.humidity,
-            updatedValue.brightness
-          );
-        }
-        return newNumbers;
+
+      client.on("reconnect", () => {
+        console.log("reconnecting");
       });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+
+      client.on("close", () => {
+        console.log("closed");
+      });
+
+      client.on("disconnect", () => {
+        console.log("disconnected");
+      });
+
+      //on end
+      client.on("end", () => {
+        console.log("ended");
+      });
+
+      //listen to test topic
+      client.on("message", (topic, message) => {
+        const data = JSON.parse(message.toString());
+        console.log(data);
+        sensorChange(data.temperature, data.humidity, data.brightness);
+      });
+    } else {
+      console.log("creating new client");
+      setClient(
+        mqtt.connect({
+          host: Config.mqttUri,
+          port: 1602,
+          protocol: "ws",
+          clientId: "iot-client-1602",
+          username: "iot-prj",
+          password: "Abc1@345",
+        })
+      );
+    }
+    return () => {
+      client?.end();
+    };
+  }, [client]);
+
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     let updatedValue = {
+  //       temperature: -1,
+  //       humidity: -1,
+  //       brightness: -1,
+  //     };
+  //     setTemperatureList((prevNumbers) => {
+  //       const newNumbers = [...prevNumbers];
+  //       newNumbers.shift();
+  //       const crtTemp = generateRandomNumber(0, 100);
+  //       setCurrentTemperature(crtTemp);
+  //       newNumbers.push(crtTemp);
+  //       updatedValue.temperature = crtTemp;
+  //       if (crtTemp > 85) toast.error("Temperature is too high");
+  //       return newNumbers;
+  //     });
+  //     setHumidityList((prevNumbers) => {
+  //       const newNumbers = [...prevNumbers];
+  //       newNumbers.shift();
+  //       const crtHum = generateRandomNumber(50, 100);
+  //       setCurrentHumidity(crtHum);
+  //       newNumbers.push(crtHum);
+  //       updatedValue.humidity = crtHum;
+  //       if (crtHum > 90) toast.info("Humidity is too high");
+  //       return newNumbers;
+  //     });
+  //     setBrightnessList((prevNumbers) => {
+  //       const newNumbers = [...prevNumbers];
+  //       newNumbers.shift();
+  //       const crtBright = generateRandomNumber(100, 1000);
+  //       setCurrentBrightness(crtBright);
+  //       newNumbers.push(crtBright);
+  //       updatedValue.brightness = crtBright;
+  //       if (crtBright > 850) toast.warning("Brightness is too high");
+  //       if (
+  //         updatedValue.temperature >= 0 &&
+  //         updatedValue.humidity >= 0 &&
+  //         updatedValue.brightness >= 0
+  //       ) {
+  //         console.log(updatedValue);
+  //         SensorChange(
+  //           updatedValue.temperature,
+  //           updatedValue.humidity,
+  //           updatedValue.brightness
+  //         );
+  //       }
+  //       return newNumbers;
+  //     });
+  //   }, 2000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const temperatureColor = (temp: number) => {
     if (temp < 25) return "to-[#ffa4a4]";
@@ -106,7 +194,7 @@ export default function Dashboard() {
   };
   return (
     <>
-    <Toaster expand={true} position="top-center" richColors/>
+      <Toaster expand={true} position="top-center" richColors />
       <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
         <Navbar index={0} />
         <div className="p-5 mx-auto mb-3 w-full">
