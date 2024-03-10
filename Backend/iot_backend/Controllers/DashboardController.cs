@@ -7,7 +7,7 @@ using iot_backend.Dto;
 using Microsoft.AspNetCore.Cors;
 using iot_backend.Helpers;
 using System.Linq.Dynamic;
-using iot_backend.MQTT;
+// using iot_backend.MQTT;
 
 namespace iot_backend.Controllers
 {
@@ -52,7 +52,7 @@ namespace iot_backend.Controllers
             };
             _context.SwitchHistory.Add(switchHistory);
             await _context.SaveChangesAsync();
-            await MQTT_Client.Publish_Message(input.SwitchType == 1 ? "light" : "fan", input.State == true ? "ON" : "OFF");
+            // await MQTT_Client.Publish_Message(input.SwitchType == 1 ? "light/pub1" : "light/pub2", input.State == true ? "ON" : "OFF");
             return Ok(switchHistory);
         }
 

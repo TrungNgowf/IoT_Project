@@ -1,6 +1,6 @@
 using iot_backend;
 using iot_backend.Configuration;
-using iot_backend.MQTT;
+// using iot_backend.MQTT;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,9 +45,9 @@ app.MapControllers();
 
 app.UseCors("nextApp");
 
-await MQTT_Client.Connect_Mqtt_Client();
-
-await MQTT_Client.Subscribe_And_Received_Message();
+// await MQTT_Client.Connect_Mqtt_Client();
+//
+// await MQTT_Client.Subscribe_And_Received_Message();
 
 app.Run();
 

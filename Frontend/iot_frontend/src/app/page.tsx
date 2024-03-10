@@ -20,16 +20,14 @@ export default function Dashboard() {
   const [client, setClient] = useState<mqtt.MqttClient | null>(null);
 
   const handleLightSwitch = () => {
-    setLightSwitch(!lightSwitch);
-    SwitchChange(!lightSwitch, 1);
+    // setLightSwitch(!lightSwitch);
+    // SwitchChange(!lightSwitch, 1);
+    client?.publish("light/pub1", lightSwitch ? "OFF" : "ON");
   };
   const handleFanSwitch = () => {
-    setFanSwitch(!fanSwitch);
-    SwitchChange(!fanSwitch, 2);
-  };
-
-  const generateRandomNumber = (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    // setFanSwitch(!fanSwitch);
+    // SwitchChange(!fanSwitch, 2);
+    client?.publish("light/pub2", fanSwitch ? "OFF" : "ON");
   };
 
   const sensorChange = (
@@ -37,6 +35,7 @@ export default function Dashboard() {
     humidity: number,
     brightness: number
   ) => {
+    console.log(temperature);
     setCurrentTemperature(temperature);
     setCurrentHumidity(humidity);
     setCurrentBrightness(brightness);
@@ -69,9 +68,21 @@ export default function Dashboard() {
       console.log("client", client);
       client.on("connect", () => {
         console.log("connected");
+        client?.publish("light/pub1", "OFF");
+        client?.publish("light/pub2", "OFF");
         client?.subscribe("sensor-client", (err) => {
           if (err) {
             console.log("error subscribing to sensor-client topic", err);
+          }
+        });
+        client?.subscribe("light/pub1/success", (err) => {
+          if (err) {
+            console.log("error subscribing to light/pub1/success topic", err);
+          }
+        });
+        client?.subscribe("light/pub2/success", (err) => {
+          if (err) {
+            console.log("error subscribing to light/pub2/success topic", err);
           }
         });
       });
@@ -99,9 +110,27 @@ export default function Dashboard() {
 
       //listen to test topic
       client.on("message", (topic, message) => {
-        const data = JSON.parse(message.toString());
-        console.log(data);
-        sensorChange(data.temperature, data.humidity, data.brightness);
+        if (topic == "sensor-client") {
+          const data = JSON.parse(message.toString());
+          console.log(data);
+          sensorChange(data.temperature, data.humidity, data.brightness);
+        }
+        if (topic == "light/pub1/success") {
+          console.log("light/pub1/success", message.toString());
+          setLightSwitch(message.toString() === "ON");
+          SwitchChange(message.toString() === "ON", 1);
+        }
+        if (topic == "light/pub2/success") {
+          console.log("light/pub2/success", message.toString());
+          setFanSwitch(message.toString() === "ON");
+          SwitchChange(message.toString() === "ON", 2);
+        }
+        if (topic == "light/pub1/failed") {
+          toast.error(`Failed to turn ${message} light 1`);
+        }
+        if (topic == "light/pub2/failed") {
+          toast.error(`Failed to turn ${message} light 2`);
+        }
       });
     } else {
       console.log("creating new client");
@@ -120,59 +149,6 @@ export default function Dashboard() {
       client?.end();
     };
   }, [client]);
-
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     let updatedValue = {
-  //       temperature: -1,
-  //       humidity: -1,
-  //       brightness: -1,
-  //     };
-  //     setTemperatureList((prevNumbers) => {
-  //       const newNumbers = [...prevNumbers];
-  //       newNumbers.shift();
-  //       const crtTemp = generateRandomNumber(0, 100);
-  //       setCurrentTemperature(crtTemp);
-  //       newNumbers.push(crtTemp);
-  //       updatedValue.temperature = crtTemp;
-  //       if (crtTemp > 85) toast.error("Temperature is too high");
-  //       return newNumbers;
-  //     });
-  //     setHumidityList((prevNumbers) => {
-  //       const newNumbers = [...prevNumbers];
-  //       newNumbers.shift();
-  //       const crtHum = generateRandomNumber(50, 100);
-  //       setCurrentHumidity(crtHum);
-  //       newNumbers.push(crtHum);
-  //       updatedValue.humidity = crtHum;
-  //       if (crtHum > 90) toast.info("Humidity is too high");
-  //       return newNumbers;
-  //     });
-  //     setBrightnessList((prevNumbers) => {
-  //       const newNumbers = [...prevNumbers];
-  //       newNumbers.shift();
-  //       const crtBright = generateRandomNumber(100, 1000);
-  //       setCurrentBrightness(crtBright);
-  //       newNumbers.push(crtBright);
-  //       updatedValue.brightness = crtBright;
-  //       if (crtBright > 850) toast.warning("Brightness is too high");
-  //       if (
-  //         updatedValue.temperature >= 0 &&
-  //         updatedValue.humidity >= 0 &&
-  //         updatedValue.brightness >= 0
-  //       ) {
-  //         console.log(updatedValue);
-  //         SensorChange(
-  //           updatedValue.temperature,
-  //           updatedValue.humidity,
-  //           updatedValue.brightness
-  //         );
-  //       }
-  //       return newNumbers;
-  //     });
-  //   }, 2000);
-  //   return () => clearInterval(interval);
-  // }, []);
 
   const temperatureColor = (temp: number) => {
     if (temp < 25) return "to-[#ffa4a4]";
