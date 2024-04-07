@@ -7,6 +7,7 @@ using iot_backend.Dto;
 using Microsoft.AspNetCore.Cors;
 using iot_backend.Helpers;
 using System.Linq.Dynamic;
+
 // using iot_backend.MQTT;
 
 namespace iot_backend.Controllers
@@ -24,13 +25,15 @@ namespace iot_backend.Controllers
         }
 
         [HttpGet("SwitchHistory")]
-        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(int? pageNumber,
-            string? filter)
+        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(DateTime? startDate,
+            DateTime? endDate,
+            string? filter, int pageNumber = 1, int pageSize = 10)
         {
-            const int pageSize = 10;
             var switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(_context.SwitchHistory
-                .Where(e => filter == "light" ? e.SwitchType == 1 : filter == "fan" ? e.SwitchType == 2 : true)
-                .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
+                .Where(e => filter == "light" ? e.SwitchType == 1 : filter != "fan" || e.SwitchType == 2)
+                .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
+                .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
             PaginationOutput<SwitchHistory> output = new PaginationOutput<SwitchHistory>
             {
                 currentPage = switchHistory.PageIndex,
@@ -48,7 +51,12 @@ namespace iot_backend.Controllers
             {
                 State = input.State,
                 SwitchType = input.SwitchType,
-                SwitchName = input.SwitchType == 1 ? "Light" : input.SwitchType == 2 ? "Fan" : "Unknown"
+                SwitchName = input.SwitchType switch
+                {
+                    1 => "Light",
+                    2 => "Fan",
+                    _ => "Unknown"
+                }
             };
             _context.SwitchHistory.Add(switchHistory);
             await _context.SaveChangesAsync();
@@ -57,38 +65,59 @@ namespace iot_backend.Controllers
         }
 
         [HttpGet("SensorHistory")]
-        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(int? pageNumber,
-            int orderBy = 0, bool isAsc = false)
+        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(DateTime? startDate,
+            DateTime? endDate, int? specifiedTemperature, int? specifiedHumidity, int? specifiedBrightness,
+            int pageNumber = 1, int orderBy = 0, bool isAsc = false, int pageSize = 10)
         {
-            const int pageSize = 10;
             PaginatedList<SensorHistory> sensorHistory;
             if (isAsc)
             {
                 if (orderBy == 0)
                 {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
-                        .OrderBy(u => u.CreationTime), pageNumber ?? 1, pageSize);
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
+                        .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
+                        .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
+                        .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
+                        .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
+                        .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                        .AsNoTracking().OrderBy(u => u.CreationTime), pageNumber, pageSize);
                 }
                 else
                 {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
-                            .OrderBy(u => orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
-                        pageNumber ?? 1, pageSize);
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
+                            .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
+                            .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
+                            .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
+                            .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
+                            .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                            .AsNoTracking().OrderBy(u =>
+                                orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
+                        pageNumber, pageSize);
                 }
             }
             else
             {
                 if (orderBy == 0)
                 {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
-                        .OrderByDescending(u => u.CreationTime), pageNumber ?? 1, pageSize);
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
+                        .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
+                        .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
+                        .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
+                        .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
+                        .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                        .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
                 }
                 else
                 {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory.AsNoTracking()
-                            .OrderByDescending(u =>
+                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
+                            .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
+                            .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
+                            .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
+                            .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
+                            .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                            .AsNoTracking().OrderByDescending(u =>
                                 orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
-                        pageNumber ?? 1,
+                        pageNumber,
                         pageSize);
                 }
             }
@@ -110,7 +139,8 @@ namespace iot_backend.Controllers
             {
                 Temperature = input.Temperature,
                 Humidity = input.Humidity,
-                Brightness = input.Brightness
+                Brightness = input.Brightness,
+                CreationTime = input.CreationTime
             };
             _context.SensorHistory.Add(sensorHistory);
             await _context.SaveChangesAsync();
