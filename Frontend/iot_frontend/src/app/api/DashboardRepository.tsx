@@ -1,4 +1,5 @@
 import Config from "@/configuration/config";
+import { Dayjs } from "dayjs";
 
 export async function SwitchChange(state: boolean, switchType: number) {
   try {
@@ -38,16 +39,24 @@ export async function SensorChange(
 export async function GetSensorHistory(
   page: number = 1,
   orderBy: number = 0,
-  isAsc: boolean = false
+  isAsc: boolean = false,
+  startDate?: Dayjs | null,
+  endDate?: Dayjs | null,
+  temperature?: number | null,
+  humidity?: number | null,
+  brightness?: number | null
 ) {
+  var request = `${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`;
+  if (startDate) request += `&startDate=${startDate.toDate}`;
+  if (endDate) request += `&endDate=${endDate.toDate}`;
+  if (temperature) request += `&specifiedTemperature=${temperature}`;
+  if (humidity) request += `&specifiedHumidity=${humidity}`;
+  if (brightness) request += `&specifiedBrightness=${brightness}`;
   try {
-    const res = await fetch(
-      `${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const res = await fetch(request, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
     return res.json();
   } catch (error) {
     console.log(error);

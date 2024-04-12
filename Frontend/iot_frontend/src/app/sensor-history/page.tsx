@@ -6,27 +6,61 @@ import { GetSensorHistory } from "../api/DashboardRepository";
 import moment from "moment";
 import { Console } from "console";
 import { debug } from "util";
+import { start } from "repl";
+import dayjs, { Dayjs } from "dayjs";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 export default function SensorHistory() {
   const [listSensorHistory, setListSensorHistory] = useState(
     [] as SensorHistory[]
   );
+  const [startDate, setStartDate] = useState<Dayjs | null>();
+  const [endDate, setEndDate] = useState<Dayjs | null>();
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [humidity, setHumidity] = useState<number | null>(null);
+  const [brightness, setBrightness] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [orderBy, setOrderBy] = useState(0);
   const [isAsc, setIsAsc] = useState(false);
 
   useEffect(() => {
-    handlePageChange(currentPage, orderBy, isAsc);
+    handlePageChange(
+      currentPage,
+      orderBy,
+      isAsc,
+      startDate,
+      endDate,
+      temperature,
+      humidity,
+      brightness
+    );
   }, []);
 
   const handlePageChange = (
     pageNumber: number,
     orderBy: number,
-    isAsc: boolean
+    isAsc: boolean,
+    startDate?: Dayjs | null,
+    endDate?: Dayjs | null,
+    temperature?: number | null,
+    humidity?: number | null,
+    brightness?: number | null
   ) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
-    GetSensorHistory(pageNumber, orderBy, isAsc).then((data) => {
+    GetSensorHistory(
+      pageNumber,
+      orderBy,
+      isAsc,
+      startDate,
+      endDate,
+      temperature,
+      humidity,
+      brightness
+    ).then((data) => {
       const sensorList = data as SensorHistoryList;
       setCurrentPage(sensorList.currentPage);
       setListSensorHistory(sensorList.items);
@@ -38,9 +72,109 @@ export default function SensorHistory() {
 
   return (
     <>
-      <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
-        <Navbar index={1} />
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css"
+        rel="stylesheet"
+      />
 
+      <div className="w-screen bg-slate-600 flex flex-col items-center dark">
+        <Navbar index={1} />
+        <div className="flex items-end justify-center mt-2 gap-20">
+          <div className="flex justify-center items-center">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+              />
+            </LocalizationProvider>
+            <div className="text-sm ml-2 mr-2">To</div>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="End Date"
+                value={endDate}
+                onChange={(newValue) => setEndDate(newValue)}
+              />
+            </LocalizationProvider>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-32">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Temperature
+              </label>
+              <input
+                type="number"
+                id="default-input"
+                defaultValue={temperature ?? ""}
+                onChange={(e) => {
+                  setTemperature(Number.parseInt(e.target.value));
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+            </div>
+            <div className="w-32">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Humidity
+              </label>
+              <input
+                type="number"
+                id="default-input"
+                defaultValue={humidity ?? ""}
+                onChange={(e) => {
+                  setHumidity(Number.parseInt(e.target.value));
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+            </div>
+            <div className="w-32">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Brightness
+              </label>
+              <input
+                type="number"
+                id="default-input"
+                defaultValue={brightness ?? ""}
+                onChange={(e) => {
+                  setBrightness(Number.parseInt(e.target.value));
+                }}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            onClick={() =>
+              handlePageChange(
+                1,
+                0,
+                false,
+                startDate,
+                endDate,
+                temperature,
+                humidity,
+                brightness
+              )
+            }
+            className="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            <svg
+              className="w-4 h-4 me-2"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+              />
+            </svg>
+            Search
+          </button>
+        </div>
         <div className="p-5 m-auto w-[60vw]">
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -182,9 +316,9 @@ export default function SensorHistory() {
             >
               <path
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M13 5H1m0 0 4 4M1 5l4-4"
               />
             </svg>
@@ -208,15 +342,16 @@ export default function SensorHistory() {
             >
               <path
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M1 5h12m0 0L9 1m4 4L9 9"
               />
             </svg>
           </a>
         </div>
       </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/datepicker.min.js"></script>
     </>
   );
 }

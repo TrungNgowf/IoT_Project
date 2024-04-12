@@ -16,9 +16,8 @@ const config: Config = {
       fontFamily: {
         boxedRound: ["BoxedRound", "sans-serif"],
         boxedRoundMedium: ["BoxedRoundMedium", "sans-serif"],
-      }
+      },
     },
   },
-  plugins: [],
 };
 export default config;
