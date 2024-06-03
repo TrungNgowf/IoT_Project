@@ -7,6 +7,7 @@ import Navbar from "./components/navbar";
 import { Toaster, toast } from "sonner";
 import { SwitchChange, SensorChange } from "./api/DashboardRepository";
 import mqtt from "mqtt";
+import WindChart from "./components/wind-chart";
 
 export default function Dashboard() {
   const [lightSwitch, setLightSwitch] = useState(false);
@@ -14,34 +15,38 @@ export default function Dashboard() {
   const [currentTemperature, setCurrentTemperature] = useState(0);
   const [currentHumidity, setCurrentHumidity] = useState(0);
   const [currentBrightness, setCurrentBrightness] = useState(0);
+  const [currentWindspeed, setCurrentWindspeed] = useState(0);
   const [temperatureList, setTemperatureList] = useState(Array(10).fill(0));
   const [humidityList, setHumidityList] = useState(Array(10).fill(0));
   const [brightnessList, setBrightnessList] = useState(Array(10).fill(0));
+  const [windspeedList, setWindspeedList] = useState(Array(10).fill(0));
   const [client, setClient] = useState<mqtt.MqttClient | null>(null);
 
   const handleLightSwitch = () => {
     // setLightSwitch(!lightSwitch);
     // SwitchChange(!lightSwitch, 1);
-    client?.publish("light/pub1", lightSwitch ? "OFF" : "ON");
+    client?.publish("light/pub1/control", lightSwitch ? "OFF" : "ON");
   };
   const handleFanSwitch = () => {
     // setFanSwitch(!fanSwitch);
     // SwitchChange(!fanSwitch, 2);
-    client?.publish("light/pub2", fanSwitch ? "OFF" : "ON");
+    client?.publish("light/pub2/control", fanSwitch ? "OFF" : "ON");
   };
 
   const sensorChange = (
     temperature: number,
     humidity: number,
-    brightness: number
+    brightness: number,
+    windspeed: number
   ) => {
-    console.log(temperature);
     setCurrentTemperature(temperature);
     setCurrentHumidity(humidity);
     setCurrentBrightness(brightness);
+    setCurrentWindspeed(windspeed);
     if (temperature > 85) toast.error("Temperature is too high");
-    if (humidity > 90) toast.info("Humidity is too high");
+    if (humidity > 95) toast.info("Humidity is too high");
     if (brightness > 850) toast.warning("Brightness is too high");
+    if (windspeed > 15) toast.warning("Windspeed is too high");
     setTemperatureList((prevNumbers) => {
       const newNumbers = [...prevNumbers];
       newNumbers.shift();
@@ -60,7 +65,13 @@ export default function Dashboard() {
       newNumbers.push(brightness);
       return newNumbers;
     });
-    SensorChange(temperature, humidity, brightness);
+    setWindspeedList((prevNumbers) => {
+      const newNumbers = [...prevNumbers];
+      newNumbers.shift();
+      newNumbers.push(windspeed);
+      return newNumbers;
+    });
+    SensorChange(temperature, humidity, brightness, windspeed);
   };
 
   useEffect(() => {
@@ -68,8 +79,8 @@ export default function Dashboard() {
       console.log("client", client);
       client.on("connect", () => {
         console.log("connected");
-        client?.publish("light/pub1", "OFF");
-        client?.publish("light/pub2", "OFF");
+        client?.publish("light/pub1/control", "OFF");
+        client?.publish("light/pub2/control", "OFF");
         client?.subscribe("sensor-client", (err) => {
           if (err) {
             console.log("error subscribing to sensor-client topic", err);
@@ -113,7 +124,12 @@ export default function Dashboard() {
         if (topic == "sensor-client") {
           const data = JSON.parse(message.toString());
           console.log(data);
-          sensorChange(data.temperature, data.humidity, data.brightness);
+          sensorChange(
+            data.temperature,
+            data.humidity,
+            data.brightness,
+            data.windspeed
+          );
         }
         if (topic == "light/pub1/success") {
           console.log("light/pub1/success", message.toString());
@@ -168,17 +184,23 @@ export default function Dashboard() {
     else if (bri < 750) return "to-[#fffc3f]";
     else return "to-[#fffb00]";
   };
+  const windspeedColor = (temp: number) => {
+    if (temp < 5) return "to-[#cffff3]";
+    else if (temp < 10) return "to-[#a7fce7]";
+    else if (temp < 15) return "to-[#61ffd8]";
+    else return "to-[#00ffc0]";
+  };
   return (
     <>
       <Toaster expand={true} position="top-center" richColors />
       <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
         <Navbar index={0} />
         <div className="p-5 mx-auto mb-3 w-full">
-          <div className="grid grid-cols-3 gap-2 w-full h-[80vh]">
+          <div className="grid grid-cols-8 gap-2 w-full h-[80vh]">
             <div
               className={`dashboard-card bg-gradient-to-tr from-[#ffd8d8] ${temperatureColor(
                 currentTemperature
-              )} row-span-1`}
+              )} row-span-1 col-span-2`}
             >
               <div className="flex items-center justify-center gap-4">
                 <div className="flex flex-col items-center justify-center">
@@ -201,7 +223,7 @@ export default function Dashboard() {
             <div
               className={`dashboard-card bg-gradient-to-tr from-[#c8d4ff] ${humidityColor(
                 currentHumidity
-              )}`}
+              )} col-span-2`}
             >
               <div className="flex items-center justify-center gap-4">
                 <div className="flex flex-col items-center justify-center">
@@ -226,7 +248,7 @@ export default function Dashboard() {
             <div
               className={`dashboard-card bg-gradient-to-tr from-[#fffebe] ${brightnessColor(
                 currentBrightness
-              )}`}
+              )} col-span-2`}
             >
               <div className="flex items-center justify-center gap-4">
                 <div className="flex flex-col items-center justify-center">
@@ -246,14 +268,40 @@ export default function Dashboard() {
                 />
               </div>
             </div>
-            <div className="dashboard-card col-span-2 row-span-4">
+            <div
+              className={`dashboard-card bg-gradient-to-tr from-[#cffff3] ${windspeedColor(
+                currentWindspeed
+              )} row-span-1 col-span-2`}
+            >
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex flex-col items-center justify-center">
+                  <p className="text-[30px] font-semibold text-black">
+                    Wind Speed
+                  </p>
+                  <p className="text-[50px] text-black font-semibold drop-shadow-lg">
+                    {currentWindspeed} m/s
+                  </p>
+                </div>
+                <Image
+                  src="/icons/temperature.png"
+                  alt="temperature"
+                  width={100}
+                  height={100}
+                  priority={true}
+                />
+              </div>
+            </div>
+            <div className="dashboard-card col-span-3 row-span-4">
               <IndexChart
                 temperatureList={temperatureList}
                 humidityList={humidityList}
                 brightnessList={brightnessList}
               />
             </div>
-            <div className="dashboard-card row-span-2">
+            <div className="dashboard-card col-span-3 row-span-4">
+              <WindChart windspeedList={windspeedList} />
+            </div>
+            <div className="dashboard-card row-span-2 col-span-2">
               <div className="flex flex-col items-center justify-center gap-3">
                 <p className="text-[40px] font-semibold text-black">Light</p>
                 <Image
@@ -294,7 +342,7 @@ export default function Dashboard() {
                 </label>
               </div>
             </div>
-            <div className="dashboard-card row-span-2">
+            <div className="dashboard-card row-span-2 col-span-2">
               <div className="flex flex-col items-center justify-center gap-3">
                 <p className="text-[40px] font-semibold text-black">Fan</p>
                 <Image

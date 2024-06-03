@@ -4,11 +4,17 @@ import { use, useEffect, useState } from "react";
 import Navbar from "../components/navbar";
 import { GetSwitchHistory } from "../api/DashboardRepository";
 import moment from "moment";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { Dayjs } from "dayjs";
 
 export default function SwitchHistory() {
   const [listSwitchHistory, setListSwitchHistory] = useState(
     [] as SwitchHistory[]
   );
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("all");
@@ -17,9 +23,14 @@ export default function SwitchHistory() {
     handlePageChange(currentPage, filter);
   }, []);
 
-  const handlePageChange = (pageNumber: number, filter: string) => {
+  const handlePageChange = (
+    pageNumber: number,
+    filter: string,
+    startDate?: Dayjs | null,
+    endDate?: Dayjs | null
+  ) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
-    GetSwitchHistory(pageNumber, filter).then((data) => {
+    GetSwitchHistory(pageNumber, filter, startDate, endDate).then((data) => {
       const switchList = data as SwitchHistoryList;
       setCurrentPage(switchList.currentPage);
       setListSwitchHistory(switchList.items);
@@ -30,8 +41,87 @@ export default function SwitchHistory() {
 
   return (
     <>
-      <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
+      <div className="w-screen bg-slate-600 flex flex-col items-center">
         <Navbar index={2} />
+        <div className="flex items-end justify-center mt-2 gap-20">
+          <div className="flex justify-center items-center">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      input: { color: "white" },
+                      label: { color: "white" },
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <div className="text-base ml-3 mr-3">To</div>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="End Date"
+                value={endDate}
+                onChange={(newValue) => setEndDate(newValue)}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      input: { color: "white" },
+                      label: { color: "white" },
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </div>
+          <div className="flex flex-row justify-center items-center gap-3">
+            <label className="text-[17px] text-white flex flex-row line-clamp-1">
+              Filter by
+            </label>
+            <select
+              id="filters"
+              onChange={(e) => {
+                e.preventDefault();
+                setFilter(e.target.value);
+              }}
+              value={filter}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >
+              <option value="all">All</option>
+              <option value="light">Light</option>
+              <option value="fan">Fan</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            onClick={() => {
+              handlePageChange(1, filter, startDate, endDate);
+            }}
+            className="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            <svg
+              className="w-4 h-4 me-2"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+              />
+            </svg>
+            Search
+          </button>
+        </div>
         <div className="p-5 m-auto w-[60vw]">
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -90,6 +180,7 @@ export default function SwitchHistory() {
               <tbody>
                 {listSwitchHistory.map((item, i, items) => {
                   return (
+                    // eslint-disable-next-line react/jsx-key
                     <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                       <th
                         scope="row"
@@ -117,75 +208,58 @@ export default function SwitchHistory() {
             </table>
           </div>
         </div>
-        <div className="flex  items-center justify-between w-[60vw] px-5 mb-3">
-          <div className="flex flex-row justify-center items-center gap-3">
-            <label className="text-[17px] text-white flex flex-row line-clamp-1">
-              Filter by
-            </label>
-            <select
-              id="filters"
-              onChange={(e) => {
-                e.preventDefault();
-                handlePageChange(1, e.target.value);
-              }}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-[16px] rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <a
+            href="#"
+            onClick={() =>
+              handlePageChange(currentPage - 1, filter, startDate, endDate)
+            }
+            className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            <svg
+              className="w-3.5 h-3.5 me-2 rtl:rotate-180"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 10"
             >
-              <option value="all" selected>
-                All
-              </option>
-              <option value="light">Light</option>
-              <option value="fan">Fan</option>
-            </select>
-          </div>
-          <div className="flex items-center justify-center gap-3">
-            <a
-              href="#"
-              onClick={() => handlePageChange(currentPage - 1, filter)}
-              className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 5H1m0 0 4 4M1 5l4-4"
+              />
+            </svg>
+            Previous
+          </a>
+          <h1 className="text-[17px]">
+            Page {currentPage} of {totalPages}
+          </h1>
+          <a
+            href="#"
+            onClick={() =>
+              handlePageChange(currentPage + 1, filter, startDate, endDate)
+            }
+            className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          >
+            Next
+            <svg
+              className="w-3.5 h-3.5 ms-2 rtl:rotate-180"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 10"
             >
-              <svg
-                className="w-3.5 h-3.5 me-2 rtl:rotate-180"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M13 5H1m0 0 4 4M1 5l4-4"
-                />
-              </svg>
-              Previous
-            </a>
-            <h1 className="text-[17px]">
-              Page {currentPage} of {totalPages}
-            </h1>
-            <a
-              href="#"
-              onClick={() => handlePageChange(currentPage + 1, filter)}
-              className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-            >
-              Next
-              <svg
-                className="w-3.5 h-3.5 ms-2 rtl:rotate-180"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 14 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M1 5h12m0 0L9 1m4 4L9 9"
-                />
-              </svg>
-            </a>
-          </div>
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M1 5h12m0 0L9 1m4 4L9 9"
+              />
+            </svg>
+          </a>
         </div>
       </div>
     </>

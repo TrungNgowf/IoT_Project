@@ -1,12 +1,10 @@
 ﻿using iot_backend.Configuration;
 using iot_backend.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using iot_backend.Dto;
 using Microsoft.AspNetCore.Cors;
 using iot_backend.Helpers;
-using System.Linq.Dynamic;
 
 // using iot_backend.MQTT;
 
@@ -31,8 +29,8 @@ namespace iot_backend.Controllers
         {
             var switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(_context.SwitchHistory
                 .Where(e => filter == "light" ? e.SwitchType == 1 : filter != "fan" || e.SwitchType == 2)
-                .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
-                .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                .Where(sd => startDate == null || sd.CreationTime >= startDate)
+                .Where(ed => endDate == null || ed.CreationTime <= endDate)
                 .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
             PaginationOutput<SwitchHistory> output = new PaginationOutput<SwitchHistory>
             {
@@ -67,6 +65,7 @@ namespace iot_backend.Controllers
         [HttpGet("SensorHistory")]
         public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(DateTime? startDate,
             DateTime? endDate, int? specifiedTemperature, int? specifiedHumidity, int? specifiedBrightness,
+            int? specifiedWindSpeed,
             int pageNumber = 1, int orderBy = 0, bool isAsc = false, int pageSize = 10)
         {
             PaginatedList<SensorHistory> sensorHistory;
@@ -78,8 +77,9 @@ namespace iot_backend.Controllers
                         .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
                         .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
                         .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                        .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
-                        .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                        .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
+                        .Where(sd => startDate == null || sd.CreationTime >= startDate)
+                        .Where(ed => endDate == null || ed.CreationTime <= endDate)
                         .AsNoTracking().OrderBy(u => u.CreationTime), pageNumber, pageSize);
                 }
                 else
@@ -88,8 +88,9 @@ namespace iot_backend.Controllers
                             .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
                             .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
                             .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                            .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
-                            .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                            .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
+                            .Where(sd => startDate == null || sd.CreationTime >= startDate)
+                            .Where(ed => endDate == null || ed.CreationTime <= endDate)
                             .AsNoTracking().OrderBy(u =>
                                 orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
                         pageNumber, pageSize);
@@ -103,8 +104,9 @@ namespace iot_backend.Controllers
                         .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
                         .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
                         .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                        .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
-                        .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                        .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
+                        .Where(sd => startDate == null || sd.CreationTime >= startDate)
+                        .Where(ed => endDate == null || ed.CreationTime <= endDate)
                         .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
                 }
                 else
@@ -113,10 +115,13 @@ namespace iot_backend.Controllers
                             .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
                             .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
                             .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                            .Where(sd => startDate == null || sd.CreationTime.Date >= startDate.Value.Date)
-                            .Where(ed => endDate == null || ed.CreationTime.Date <= endDate.Value.Date)
+                            .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
+                            .Where(sd => startDate == null || sd.CreationTime >= startDate)
+                            .Where(ed => endDate == null || ed.CreationTime <= endDate)
                             .AsNoTracking().OrderByDescending(u =>
-                                orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
+                                orderBy == 1 ? u.Temperature :
+                                orderBy == 2 ? u.Humidity :
+                                orderBy == 3 ? u.Brightness : u.WindSpeed),
                         pageNumber,
                         pageSize);
                 }
@@ -140,6 +145,7 @@ namespace iot_backend.Controllers
                 Temperature = input.Temperature,
                 Humidity = input.Humidity,
                 Brightness = input.Brightness,
+                WindSpeed = input.WindSpeed,
                 CreationTime = input.CreationTime
             };
             _context.SensorHistory.Add(sensorHistory);

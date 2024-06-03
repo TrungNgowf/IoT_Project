@@ -19,7 +19,8 @@ export async function SwitchChange(state: boolean, switchType: number) {
 export async function SensorChange(
   temperature: number,
   humidity: number,
-  brightness: number
+  brightness: number,
+  windspeed: number
 ) {
   try {
     const res = await fetch(`${Config.baseApi}/Dashboard/SensorChange`, {
@@ -29,6 +30,7 @@ export async function SensorChange(
         temperature: temperature,
         humidity: humidity,
         brightness: brightness,
+        windSpeed: windspeed,
       }),
     });
   } catch (error) {
@@ -44,15 +46,18 @@ export async function GetSensorHistory(
   endDate?: Dayjs | null,
   temperature?: number | null,
   humidity?: number | null,
-  brightness?: number | null
+  brightness?: number | null,
+  windSpeed?: number | null
 ) {
   var request = `${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`;
-  if (startDate) request += `&startDate=${startDate.toDate}`;
-  if (endDate) request += `&endDate=${endDate.toDate}`;
+  if (startDate) request += `&startDate=${startDate.toISOString()}`;
+  if (endDate) request += `&endDate=${endDate.toISOString()}`;
   if (temperature) request += `&specifiedTemperature=${temperature}`;
   if (humidity) request += `&specifiedHumidity=${humidity}`;
   if (brightness) request += `&specifiedBrightness=${brightness}`;
+  if (windSpeed) request += `&specifiedWindSpeed=${windSpeed}`;
   try {
+    console.log(request);
     const res = await fetch(request, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -65,16 +70,18 @@ export async function GetSensorHistory(
 
 export async function GetSwitchHistory(
   page: number = 1,
-  filter: string = "all"
+  filter: string = "all",
+  startDate?: Dayjs | null,
+  endDate?: Dayjs | null
 ) {
+  let request = `${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`;
+  if (startDate) request += `&startDate=${startDate.toISOString()}`;
+  if (endDate) request += `&endDate=${endDate.toISOString()}`;
   try {
-    const res = await fetch(
-      `${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const res = await fetch(request, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
     return res.json();
   } catch (error) {
     console.log(error);

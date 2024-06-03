@@ -21,10 +21,18 @@ export default function IndexChart({
       ]}
       yAxis={[
         {
+          id: "leftYAxis",
           min: 0,
-          max: 1000, 
+          max: 100,
           tickMinStep: 10,
-          tickMaxStep: 50
+          tickMaxStep: 10,
+        },
+        {
+          id: "rightYAxis",
+          min: 0,
+          max: 1000,
+          tickMinStep: 50,
+          tickMaxStep: 100,
         },
       ]}
       series={[
@@ -33,20 +41,24 @@ export default function IndexChart({
           color: "#fffb12",
           data: brightnessList,
           curve: "catmullRom",
+          yAxisKey: "rightYAxis",
         },
         {
           label: "Humidity",
           color: "#0339fc",
           data: humidityList,
           curve: "catmullRom",
+          yAxisKey: "leftYAxis",
         },
         {
           label: "Temperature",
           color: "#ff0000",
           data: temperatureList,
           curve: "catmullRom",
+          yAxisKey: "leftYAxis",
         },
       ]}
+      rightAxis="rightYAxis"
     />
   );
 }
