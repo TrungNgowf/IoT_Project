@@ -1,19 +1,29 @@
-﻿
-using System.Security.Authentication;
+﻿using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
+using Dapper;
+using iot_backend.Controllers;
+using iot_backend.Entities;
+using Microsoft.Data.SqlClient;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Formatter;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace iot_backend.MQTT;
 
 public static class MQTT_Client
 {
-    public static string brokerUrl = "10.0.0.68";
+    public static string brokerUrl = "192.168.39.92";
     public static string username = "iot-prj";
     public static string password = "Abc1@345";
     public static IMqttClient? mqttClient;
+
+    private static string sql =
+        "Server=TRUNGNGOWF\\TRUNGNG;Database=IoT_Dashboard;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;User Id=sa;Password=Nightm@re666";
+
+    private static SqlConnection conn = new SqlConnection(sql);
 
 
     public static async Task Connect_Mqtt_Client()
@@ -28,7 +38,6 @@ public static class MQTT_Client
         var response = await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
         Console.WriteLine("The MQTT client is connected.");
-
         response.DumpToConsole();
     }
 
@@ -77,10 +86,18 @@ public static class MQTT_Client
     public static async Task Subscribe_And_Received_Message()
     {
         var mqttFactory = new MqttFactory();
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
         mqttClient.ApplicationMessageReceivedAsync += async e =>
         {
             string receivedMessage = ($"{Encoding.Default.GetString(e.ApplicationMessage.PayloadSegment)}");
             Console.WriteLine(receivedMessage);
+            SensorHistory weatherData = JsonConvert.DeserializeObject<SensorHistory>(receivedMessage)!;
+            await conn.QueryAsync(
+                "INSERT INTO SensorHistory (Temperature, Humidity, Brightness, WindSpeed, CreationTime) VALUES (@Temperature, @Humidity, @Brightness, @WindSpeed, @CreationTime)",
+                weatherData);
             await Publish_Message("sensor-client", receivedMessage);
             await Task.CompletedTask;
         };

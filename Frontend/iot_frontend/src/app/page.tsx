@@ -71,7 +71,7 @@ export default function Dashboard() {
       newNumbers.push(windspeed);
       return newNumbers;
     });
-    SensorChange(temperature, humidity, brightness, windspeed);
+    // SensorChange(temperature, humidity, brightness, windspeed);
   };
 
   useEffect(() => {

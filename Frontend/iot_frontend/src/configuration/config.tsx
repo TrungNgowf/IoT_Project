@@ -3,7 +3,7 @@ const Config = () => {};
 export default Config;
 
 Config.baseApi = "https://localhost:7000/api";
-Config.mqttUri = `ws://192.168.1.10`;
+Config.mqttUri = `ws://192.168.39.92`;
 
 async function POST(api: string, params: any) {
   try {
