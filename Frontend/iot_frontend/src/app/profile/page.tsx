@@ -20,7 +20,13 @@ export default function Profile() {
               <div className="inline-block w-3 h-3 mr-2 rounded-full bg-green-400"></div>
             </div>
             <div className="flex items-start justify-center gap-3 py-5">
-            <Image src="/img/profile.jpg" alt={""} className="rounded" width={150} height={20}/>
+              <Image
+                src="/img/profile.jpg"
+                alt={""}
+                className="rounded"
+                width={150}
+                height={20}
+              />
               <div className="px-8">
                 <p>
                   <em className="text-blue-400">const</em>{" "}

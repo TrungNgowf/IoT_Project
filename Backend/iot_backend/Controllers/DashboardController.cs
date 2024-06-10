@@ -1,10 +1,12 @@
-﻿using iot_backend.Configuration;
+﻿using System.Globalization;
+using iot_backend.Configuration;
 using iot_backend.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using iot_backend.Dto;
 using Microsoft.AspNetCore.Cors;
 using iot_backend.Helpers;
+using Microsoft.Data.SqlClient;
 
 // using iot_backend.MQTT;
 
@@ -23,15 +25,24 @@ namespace iot_backend.Controllers
         }
 
         [HttpGet("SwitchHistory")]
-        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(DateTime? startDate,
-            DateTime? endDate,
+        public async Task<ActionResult<PaginationOutput<SwitchHistory>>> GetSwitchHistory(String? searchDate,
             string? filter, int pageNumber = 1, int pageSize = 10)
         {
-            var switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(_context.SwitchHistory
-                .Where(e => filter == "light" ? e.SwitchType == 1 : filter != "fan" || e.SwitchType == 2)
-                .Where(sd => startDate == null || sd.CreationTime >= startDate)
-                .Where(ed => endDate == null || ed.CreationTime <= endDate)
-                .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
+            PaginatedList<SwitchHistory> switchHistory;
+            var sqlQuerry = "SELECT * FROM SwitchHistory where 1=1";
+            if (searchDate != null)
+            {
+                sqlQuerry += $" and convert(varchar(25), CreationTime, 120) like '{ConvertStringToDate(searchDate)}%'";
+            }
+            if(!string.IsNullOrEmpty(filter) && filter != "all")
+            {
+                sqlQuerry += $" and SwitchType = {(filter == "light" ? 1 : 2)}";
+            }
+            sqlQuerry += " ORDER BY CreationTime DESC";
+            sqlQuerry += " OFFSET 0 ROWS";
+            switchHistory = await PaginatedList<SwitchHistory>.CreateAsync(
+                _context.SwitchHistory.FromSqlRaw<SwitchHistory>(sqlQuerry),
+                pageNumber, pageSize);
             PaginationOutput<SwitchHistory> output = new PaginationOutput<SwitchHistory>
             {
                 currentPage = switchHistory.PageIndex,
@@ -62,71 +73,71 @@ namespace iot_backend.Controllers
             return Ok(switchHistory);
         }
 
+        private string ConvertStringToDate(string inputDate)
+        {
+            try
+            {
+                // Define the expected format for the input string
+                string format = inputDate.Length <= 10 ? "dd/MM/yyyy" :
+                    inputDate.Length <= 13 ? "dd/MM/yyyy HH" :
+                    inputDate.Length <= 16 ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy HH:mm:ss";
+
+                // Parse the string to a DateTime object
+                DateTime parsedDate = DateTime.ParseExact(inputDate, format, CultureInfo.InvariantCulture);
+
+                // Return the formatted date string in yyyy-MM-dd HH:mm:ss format
+                return parsedDate.ToString(inputDate.Length <= 10 ? "yyyy-MM-dd" :
+                    inputDate.Length <= 13 ? "yyyy-MM-dd HH" :
+                    inputDate.Length <= 16 ? "yyyy-MM-dd HH:mm" : "yyyy-MM-dd HH:mm:ss");
+            }
+            catch (FormatException)
+            {
+                // Handle cases where the input string doesn't match the format
+                return "Invalid Date Format";
+            }
+        }
+
         [HttpGet("SensorHistory")]
-        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(DateTime? startDate,
-            DateTime? endDate, int? specifiedTemperature, int? specifiedHumidity, int? specifiedBrightness,
+        public async Task<ActionResult<PaginationOutput<SensorHistory>>> GetSensorHistory(String? searchDate,
+            int? specifiedTemperature, int? specifiedHumidity, int? specifiedBrightness,
             int? specifiedWindSpeed,
             int pageNumber = 1, int orderBy = 0, bool isAsc = false, int pageSize = 10)
         {
             PaginatedList<SensorHistory> sensorHistory;
-            if (isAsc)
+            var sqlQuerry = "SELECT * FROM SensorHistory where 1=1";
+            if (searchDate != null)
             {
-                if (orderBy == 0)
-                {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
-                        .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
-                        .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
-                        .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                        .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
-                        .Where(sd => startDate == null || sd.CreationTime >= startDate)
-                        .Where(ed => endDate == null || ed.CreationTime <= endDate)
-                        .AsNoTracking().OrderBy(u => u.CreationTime), pageNumber, pageSize);
-                }
-                else
-                {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
-                            .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
-                            .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
-                            .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                            .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
-                            .Where(sd => startDate == null || sd.CreationTime >= startDate)
-                            .Where(ed => endDate == null || ed.CreationTime <= endDate)
-                            .AsNoTracking().OrderBy(u =>
-                                orderBy == 1 ? u.Temperature : orderBy == 2 ? u.Humidity : u.Brightness),
-                        pageNumber, pageSize);
-                }
-            }
-            else
-            {
-                if (orderBy == 0)
-                {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
-                        .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
-                        .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
-                        .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                        .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
-                        .Where(sd => startDate == null || sd.CreationTime >= startDate)
-                        .Where(ed => endDate == null || ed.CreationTime <= endDate)
-                        .AsNoTracking().OrderByDescending(u => u.CreationTime), pageNumber, pageSize);
-                }
-                else
-                {
-                    sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(_context.SensorHistory
-                            .Where(e => specifiedTemperature == null || e.Temperature == specifiedTemperature)
-                            .Where(e => specifiedHumidity == null || e.Humidity == specifiedHumidity)
-                            .Where(e => specifiedBrightness == null || e.Brightness == specifiedBrightness)
-                            .Where(e => specifiedWindSpeed == null || e.WindSpeed == specifiedWindSpeed)
-                            .Where(sd => startDate == null || sd.CreationTime >= startDate)
-                            .Where(ed => endDate == null || ed.CreationTime <= endDate)
-                            .AsNoTracking().OrderByDescending(u =>
-                                orderBy == 1 ? u.Temperature :
-                                orderBy == 2 ? u.Humidity :
-                                orderBy == 3 ? u.Brightness : u.WindSpeed),
-                        pageNumber,
-                        pageSize);
-                }
+                sqlQuerry += $" and convert(varchar(25), CreationTime, 120) like '{ConvertStringToDate(searchDate)}%'";
             }
 
+            if (specifiedTemperature != null)
+            {
+                sqlQuerry += $" and Temperature = {specifiedTemperature}";
+            }
+
+            if (specifiedHumidity != null)
+            {
+                sqlQuerry += $" and Humidity = {specifiedHumidity}";
+            }
+
+            if (specifiedBrightness != null)
+            {
+                sqlQuerry += $" and Brightness = {specifiedBrightness}";
+            }
+
+            if (specifiedWindSpeed != null)
+            {
+                sqlQuerry += $" and WindSpeed = {specifiedWindSpeed}";
+            }
+
+            sqlQuerry +=
+                $" ORDER BY {(orderBy == 0 ? "CreationTime" : orderBy == 1 ? "Temperature" : orderBy == 2 ? "Humidity" : orderBy == 3 ? "Brightness" : "WindSpeed")}";
+            sqlQuerry += isAsc ? " ASC" : " DESC";
+            sqlQuerry += " OFFSET 0 ROWS";
+
+            sensorHistory = await PaginatedList<SensorHistory>.CreateAsync(
+                _context.SensorHistory.FromSqlRaw<SensorHistory>(sqlQuerry),
+                pageNumber, pageSize);
             PaginationOutput<SensorHistory> output = new PaginationOutput<SensorHistory>
             {
                 currentPage = sensorHistory.PageIndex,

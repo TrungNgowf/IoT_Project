@@ -18,12 +18,11 @@ export default function SensorHistory() {
   const [listSensorHistory, setListSensorHistory] = useState(
     [] as SensorHistory[]
   );
-  const [startDate, setStartDate] = useState<Dayjs | null>(null);
-  const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [temperature, setTemperature] = useState<number | null>(null);
-  const [humidity, setHumidity] = useState<number | null>(null);
-  const [brightness, setBrightness] = useState<number | null>(null);
-  const [windspeed, setWindSpeed] = useState<number | null>(null);
+  const [searchDate, setSearchDate] = useState("");
+  const [temperature, setTemperature] = useState<number | null | "">(null);
+  const [humidity, setHumidity] = useState<number | null | "">(null);
+  const [brightness, setBrightness] = useState<number | null | "">(null);
+  const [windspeed, setWindSpeed] = useState<number | null | "">(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [orderBy, setOrderBy] = useState(0);
@@ -34,11 +33,11 @@ export default function SensorHistory() {
       currentPage,
       orderBy,
       isAsc,
-      startDate,
-      endDate,
+      searchDate,
       temperature,
       humidity,
-      brightness
+      brightness,
+      windspeed
     );
   }, []);
 
@@ -46,31 +45,28 @@ export default function SensorHistory() {
     pageNumber: number,
     orderBy: number,
     isAsc: boolean,
-    startDate?: Dayjs | null,
-    endDate?: Dayjs | null,
-    temperature?: number | null,
-    humidity?: number | null,
-    brightness?: number | null,
-    windspeed?: number | null
+    searchDate?: string,
+    temperature?: number | null | "",
+    humidity?: number | null | "",
+    brightness?: number | null | "",
+    windspeed?: number | null | ""
   ) => {
     console.log(
       pageNumber,
       orderBy,
       isAsc,
-      startDate,
-      endDate,
+      searchDate,
       temperature,
       humidity,
       brightness,
       windspeed
     );
-    if (pageNumber < 1 || pageNumber > totalPages) return;
+    if (pageNumber < 1 || pageNumber > totalPages + 1) return;
     GetSensorHistory(
       pageNumber,
       orderBy,
       isAsc,
-      startDate,
-      endDate,
+      searchDate,
       temperature,
       humidity,
       brightness,
@@ -91,39 +87,18 @@ export default function SensorHistory() {
         <Navbar index={1} />
         <div className="flex items-end justify-center mt-2 gap-20">
           <div className="flex justify-center items-center">
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Start Date"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: {
-                      input: { color: "white" },
-                      label: { color: "white" },
-                    },
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <div className="text-base ml-3 mr-3">To</div>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="End Date"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: {
-                      input: { color: "white" },
-                      label: { color: "white" },
-                    },
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Search date
+              </label>
+              <input
+                type="text"
+                id="default-input"
+                defaultValue={searchDate ?? ""}
+                onChange={(e) => setSearchDate(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              ></input>
+            </div>
           </div>
           <div className="flex items-center justify-center gap-2">
             <div className="w-32">
@@ -135,7 +110,11 @@ export default function SensorHistory() {
                 id="default-input"
                 defaultValue={temperature ?? ""}
                 onChange={(e) => {
-                  setTemperature(Number.parseInt(e.target.value));
+                  setTemperature(
+                    e.target.value == ""
+                      ? null
+                      : Number.parseInt(e.target.value)
+                  );
                 }}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               />
@@ -149,7 +128,11 @@ export default function SensorHistory() {
                 id="default-input"
                 defaultValue={humidity ?? ""}
                 onChange={(e) => {
-                  setHumidity(Number.parseInt(e.target.value));
+                  setHumidity(
+                    e.target.value == ""
+                      ? null
+                      : Number.parseInt(e.target.value)
+                  );
                 }}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               />
@@ -163,7 +146,11 @@ export default function SensorHistory() {
                 id="default-input"
                 defaultValue={brightness ?? ""}
                 onChange={(e) => {
-                  setBrightness(Number.parseInt(e.target.value));
+                  setBrightness(
+                    e.target.value == ""
+                      ? null
+                      : Number.parseInt(e.target.value)
+                  );
                 }}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               />
@@ -177,7 +164,11 @@ export default function SensorHistory() {
                 id="default-input"
                 defaultValue={windspeed ?? ""}
                 onChange={(e) => {
-                  setWindSpeed(Number.parseInt(e.target.value));
+                  setWindSpeed(
+                    e.target.value == ""
+                      ? null
+                      : Number.parseInt(e.target.value)
+                  );
                 }}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               />
@@ -190,8 +181,7 @@ export default function SensorHistory() {
                 1,
                 0,
                 false,
-                startDate,
-                endDate,
+                searchDate,
                 temperature,
                 humidity,
                 brightness,
@@ -233,8 +223,7 @@ export default function SensorHistory() {
                             1,
                             1,
                             orderBy == 1 ? !isAsc : false,
-                            startDate,
-                            endDate,
+                            searchDate,
                             temperature,
                             humidity,
                             brightness
@@ -263,8 +252,7 @@ export default function SensorHistory() {
                             1,
                             2,
                             orderBy == 2 ? !isAsc : false,
-                            startDate,
-                            endDate,
+                            searchDate,
                             temperature,
                             humidity,
                             brightness
@@ -293,8 +281,7 @@ export default function SensorHistory() {
                             1,
                             3,
                             orderBy == 3 ? !isAsc : false,
-                            startDate,
-                            endDate,
+                            searchDate,
                             temperature,
                             humidity,
                             brightness
@@ -323,8 +310,7 @@ export default function SensorHistory() {
                             1,
                             4,
                             orderBy == 4 ? !isAsc : false,
-                            startDate,
-                            endDate,
+                            searchDate,
                             temperature,
                             humidity,
                             brightness,
@@ -354,8 +340,7 @@ export default function SensorHistory() {
                             1,
                             0,
                             orderBy == 0 ? !isAsc : false,
-                            startDate,
-                            endDate,
+                            searchDate,
                             temperature,
                             humidity,
                             brightness
@@ -421,7 +406,18 @@ export default function SensorHistory() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <a
             href="#"
-            onClick={() => handlePageChange(currentPage - 1, orderBy, isAsc)}
+            onClick={() =>
+              handlePageChange(
+                currentPage - 1,
+                orderBy,
+                isAsc,
+                searchDate,
+                temperature,
+                humidity,
+                brightness,
+                windspeed
+              )
+            }
             className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
             <svg
@@ -446,7 +442,18 @@ export default function SensorHistory() {
           </h1>
           <a
             href="#"
-            onClick={() => handlePageChange(currentPage + 1, orderBy, isAsc)}
+            onClick={() =>
+              handlePageChange(
+                currentPage + 1,
+                orderBy,
+                isAsc,
+                searchDate,
+                temperature,
+                humidity,
+                brightness,
+                windspeed
+              )
+            }
             className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
             Next

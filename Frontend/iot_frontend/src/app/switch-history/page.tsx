@@ -17,6 +17,7 @@ export default function SwitchHistory() {
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchDate, setSearchDate] = useState("");
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
@@ -26,11 +27,10 @@ export default function SwitchHistory() {
   const handlePageChange = (
     pageNumber: number,
     filter: string,
-    startDate?: Dayjs | null,
-    endDate?: Dayjs | null
+    searchDate?: string
   ) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
-    GetSwitchHistory(pageNumber, filter, startDate, endDate).then((data) => {
+    GetSwitchHistory(pageNumber, filter, searchDate).then((data) => {
       const switchList = data as SwitchHistoryList;
       setCurrentPage(switchList.currentPage);
       setListSwitchHistory(switchList.items);
@@ -41,43 +41,22 @@ export default function SwitchHistory() {
 
   return (
     <>
-      <div className="w-screen bg-slate-600 flex flex-col items-center">
+      <div className="w-screen h-screen bg-slate-600 flex flex-col items-center">
         <Navbar index={2} />
         <div className="flex items-end justify-center mt-2 gap-20">
           <div className="flex justify-center items-center">
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Start Date"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: {
-                      input: { color: "white" },
-                      label: { color: "white" },
-                    },
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <div className="text-base ml-3 mr-3">To</div>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="End Date"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    sx: {
-                      input: { color: "white" },
-                      label: { color: "white" },
-                    },
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                Search date
+              </label>
+              <input
+                type="text"
+                id="default-input"
+                defaultValue={searchDate ?? ""}
+                onChange={(e) => setSearchDate(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              ></input>
+            </div>
           </div>
           <div className="flex flex-row justify-center items-center gap-3">
             <label className="text-[17px] text-white flex flex-row line-clamp-1">
@@ -100,7 +79,7 @@ export default function SwitchHistory() {
           <button
             type="submit"
             onClick={() => {
-              handlePageChange(1, filter, startDate, endDate);
+              handlePageChange(1, filter, searchDate);
             }}
             className="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           >
@@ -212,7 +191,7 @@ export default function SwitchHistory() {
           <a
             href="#"
             onClick={() =>
-              handlePageChange(currentPage - 1, filter, startDate, endDate)
+              handlePageChange(currentPage - 1, filter, searchDate)
             }
             className="flex items-center justify-center px-4 h-10 me-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
@@ -239,7 +218,7 @@ export default function SwitchHistory() {
           <a
             href="#"
             onClick={() =>
-              handlePageChange(currentPage + 1, filter, startDate, endDate)
+              handlePageChange(currentPage + 1, filter, searchDate)
             }
             className="flex items-center justify-center px-4 h-10 ms-3 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >

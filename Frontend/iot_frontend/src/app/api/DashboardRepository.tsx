@@ -42,20 +42,23 @@ export async function GetSensorHistory(
   page: number = 1,
   orderBy: number = 0,
   isAsc: boolean = false,
-  startDate?: Dayjs | null,
-  endDate?: Dayjs | null,
-  temperature?: number | null,
-  humidity?: number | null,
-  brightness?: number | null,
-  windSpeed?: number | null
+  searchDate?: string,
+  temperature?: number | null | "",
+  humidity?: number | null | "",
+  brightness?: number | null | "",
+  windSpeed?: number | null | ""
 ) {
   var request = `${Config.baseApi}/Dashboard/SensorHistory?pageNumber=${page}&orderBy=${orderBy}&isAsc=${isAsc}`;
-  if (startDate) request += `&startDate=${startDate.toISOString()}`;
-  if (endDate) request += `&endDate=${endDate.toISOString()}`;
-  if (temperature) request += `&specifiedTemperature=${temperature}`;
-  if (humidity) request += `&specifiedHumidity=${humidity}`;
-  if (brightness) request += `&specifiedBrightness=${brightness}`;
-  if (windSpeed) request += `&specifiedWindSpeed=${windSpeed}`;
+  if (searchDate != "" && searchDate != null)
+    request += `&searchDate=${searchDate}`;
+  if (temperature != null && temperature != "")
+    request += `&specifiedTemperature=${temperature}`;
+  if (humidity != null && humidity != "")
+    request += `&specifiedHumidity=${humidity}`;
+  if (brightness != null && brightness != "")
+    request += `&specifiedBrightness=${brightness}`;
+  if (windSpeed != null && windSpeed != "")
+    request += `&specifiedWindSpeed=${windSpeed}`;
   try {
     console.log(request);
     const res = await fetch(request, {
@@ -71,12 +74,11 @@ export async function GetSensorHistory(
 export async function GetSwitchHistory(
   page: number = 1,
   filter: string = "all",
-  startDate?: Dayjs | null,
-  endDate?: Dayjs | null
+  searchDate?: string
 ) {
   let request = `${Config.baseApi}/Dashboard/SwitchHistory?pageNumber=${page}&filter=${filter}`;
-  if (startDate) request += `&startDate=${startDate.toISOString()}`;
-  if (endDate) request += `&endDate=${endDate.toISOString()}`;
+  if (searchDate != "" && searchDate != null)
+    request += `&searchDate=${searchDate}`;
   try {
     const res = await fetch(request, {
       method: "GET",
